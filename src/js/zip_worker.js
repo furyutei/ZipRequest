@@ -8,7 +8,8 @@ let ZIP_TAB_INFO_MAP = {},
     USER_AGENT = navigator.userAgent.toLowerCase(),
     IS_EDGE = ( 0 <= USER_AGENT.indexOf( 'edge' ) ),
     IS_FIREFOX = ( 0 <= USER_AGENT.indexOf( 'firefox' ) ),
-    IS_CHROME = ( ( ! IS_EDGE ) && ( 0 <= USER_AGENT.indexOf( 'chrome' ) ) );
+    IS_CHROME = ( ( ! IS_EDGE ) && ( 0 <= USER_AGENT.indexOf( 'chrome' ) ) ),
+    SENDBACK_BLOB_FOR_FIREFOX = false; // Firefox で、Blob を直接（Blob URLに変換せずに）送信
 
 
 function zip_open( tab_id ) {
@@ -127,7 +128,7 @@ function zip_generate( tab_id, zip_id, zip_parameters ) {
         
         zip.generateAsync( { type : zip_type } )
         .then( zip_content => {
-            if ( IS_FIREFOX && ( url_scheme == 'blob' ) ) {
+            if ( ( IS_FIREFOX && SENDBACK_BLOB_FOR_FIREFOX ) && ( url_scheme == 'blob' ) ) {
                 // Firefox では、Blob URL に変換したものを content_scripts 側に渡すと、そちらでダウンロードできない
                 // ※ ただし、なぜか fetch() は可能、手動でアドレス欄にコピーしてもダウンロードできる）
                 // → Firefox では Blob をそのまま sendResponse() で送信可能なため、content_scripts 側で Blob URL に変換することで対応
@@ -203,7 +204,7 @@ function on_message( message, sender, sendResponse ) {
         sendResponse( response );
     } // end of complete()
     
-    if ( ( ! sender.tab ) || ( ! sender.tab.id ) ) {
+    if ( ( sender.id != browser.runtime.id ) || ( ! sender.tab ) || ( ! sender.tab.id ) ) {
         on_error( { error : 'unknown sender' } );
         return flag_async;
     }

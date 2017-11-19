@@ -224,6 +224,28 @@ window.ZipRequestLegacy = ( function () {
                 
                 // TODO: Edge の場合、Blob URL にすると content_scripts 側でダウンロードできない
                 zip_url = response.zip_url;
+                
+                if ( IS_FIREFOX && ( self.url_scheme == 'blob' ) ) {
+                    // background(zip_worker.js) 側で Blob URL に変換した場合、Firefox ではダウンロードできなくなってしまう
+                    // → Blob URL を Blob として取得しなおしてから、再度 Blob URL に変換すると、ダウンロードできるようになる
+                    var xhr = new XMLHttpRequest();
+                    
+                    xhr.open( 'GET', zip_url, true );
+                    xhr.responseType = 'blob';
+                    xhr.onload = function () {
+                        if ( xhr.readyState != 4 ) {
+                            return;
+                        }
+                        self.__success__( {
+                            zip_url : URL.createObjectURL( xhr.response )
+                        }, self.generate_callback );
+                    };
+                    xhr.onerror = function () {
+                        self.__error__( 'ZIP_GENERATE: XMLHttpRequest()', 'error: ' + xhr.status + xhr.statusText, self.generate_callback );
+                    };
+                    xhr.send();
+                    return;
+                }
             }
             else {
                 // background(zip_worker.js) 側で Blob URL に変換した場合、Firefox ではダウンロードできなくなってしまう

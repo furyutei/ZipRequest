@@ -109,6 +109,22 @@ window.ZipRequestPromise = class {
                     
                     // TODO: Edge の場合、Blob URL にすると content_scripts 側でダウンロードできない
                     zip_url = response.zip_url;
+                    
+                    if ( IS_FIREFOX && ( self.url_scheme == 'blob' ) ) {
+                        // background(zip_worker.js) 側で Blob URL に変換した場合、Firefox ではダウンロードできなくなってしまう
+                        // → Blob URL を Blob として取得しなおしてから、再度 Blob URL に変換すると、ダウンロードできるようになる
+                        fetch( zip_url )
+                        .then( response => response.blob() )
+                        .then( blob => {
+                            self.__success__( {
+                                zip_url : URL.createObjectURL( blob )
+                            }, resolve );
+                        } )
+                        .catch( error => {
+                            self.__error__( 'ZIP_GENERATE: fetch()', error, reject );
+                        } );
+                        return;
+                    }
                 }
                 else {
                     // background(zip_worker.js) 側で Blob URL に変換した場合、Firefox ではダウンロードできなくなってしまう
