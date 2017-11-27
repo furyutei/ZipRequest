@@ -181,7 +181,7 @@ function zip_close( tab_id, zip_id ) {
 } // end of zip_close()
 
 
-function on_message( message, sender, sendResponse ) {
+function zip_request_handler( message, sender, sendResponse ) {
     let flag_async = false;
     
     // イベントハンドラが true を返しておかないと、非同期処理後の sendResponse が無効化されてしまう
@@ -243,8 +243,8 @@ function on_message( message, sender, sendResponse ) {
     }
     
     return flag_async;
-}  // end of on_message()
+}  // end of zip_request_handler()
 
-browser.runtime.onMessage.addListener( on_message );
+window.zip_request_handler = zip_request_handler;
 
 } )();
