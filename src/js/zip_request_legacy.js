@@ -34,7 +34,7 @@ window.ZipRequestLegacy = ( function () {
             }
             
             if ( ! self.opened ) {
-                self.__error__( 'ZIP_OPEN', 'not opend', callback );
+                self.__error__( 'ZIP_OPEN', 'not opened', callback );
                 return;
             }
             self.zip_id = response.zip_id;
@@ -52,7 +52,7 @@ window.ZipRequestLegacy = ( function () {
         var self = this;
         
         if ( ! self.opened ) {
-            self.__error__( 'file()', 'not opend', callback );
+            self.__error__( 'file()', 'not opened', callback );
             return self;
         }
         
@@ -71,7 +71,7 @@ window.ZipRequestLegacy = ( function () {
         var self = this;
         
         if ( ! self.opened ) {
-            self.__error__( 'generate()', 'not opend', callback );
+            self.__error__( 'generate()', 'not opened', callback );
             return self;
         }
         
@@ -90,7 +90,7 @@ window.ZipRequestLegacy = ( function () {
         var self = this;
         
         if ( ! self.opened  ) {
-            self.__error__( 'close()', 'not opend', callback );
+            self.__error__( 'close()', 'not opened', callback );
             return self;
         }
         self.opened = false;
@@ -150,33 +150,30 @@ window.ZipRequestLegacy = ( function () {
         if ( typeof callback == 'function' ) {
             callback( {
                 message : message,
-                error : errror
+                error : error
             } );
         }
     }; // end of __error__()
     
     
     ZipRequestLegacy.prototype.__flush__ = function () {
-        var self = this, file_info, zip_url, zip_content, callback;
+        var self = this;
         
         if ( self.zip_id === null ) {
             return self;
         }
         
-        while ( 0 < self.waiting_file_infos.length ) {
-            self.file_counter ++;
-            
-            file_info = self.waiting_file_infos.shift();
+        
+        function send_zip_file_request( file_info ) {
+            var callback = file_info.callback;
+            if ( callback ) {
+                // Firefox では、sendMessage() の引数に関数が含まれているとメッセージが送信されない
+                delete file_info.callback;
+            }
             
             if ( ( file_info.zip_options ) && ( file_info.zip_options.date ) && ( typeof file_info.zip_options.date.getTime == 'function' ) ) {
                 // sendMessage() では、JSON シリアライズ不可なオブジェクトは送信できないので（例外もあり？）、変換が必要
                 file_info.zip_options.date = file_info.zip_options.date.getTime();
-            }
-            
-            callback = file_info.callback;
-            if ( callback ) {
-                // Firefox では、sendMessage() の引数に関数が含まれているとメッセージが送信されない
-                delete file_info.callback;
             }
             
             browser.runtime.sendMessage( {
@@ -194,6 +191,16 @@ window.ZipRequestLegacy = ( function () {
                 self.__success__( response, callback );
                 self.__flush__();
             } );
+        } // end of send_zip_file_request()
+        
+        var file_info;
+        
+        while ( 0 < self.waiting_file_infos.length ) {
+            self.file_counter ++;
+            
+            file_info = self.waiting_file_infos.shift();
+            
+            send_zip_file_request( file_info );
         }
         
         if ( ! self.download_request ) {
@@ -213,6 +220,9 @@ window.ZipRequestLegacy = ( function () {
                 url_scheme : self.url_scheme
             }
         }, function ( response ) {
+            var zip_url,
+                zip_content;
+            
             if ( response.error ) {
                 self.__error__( 'ZIP_GENERATE', response.error, self.generate_callback );
                 return;
@@ -250,7 +260,7 @@ window.ZipRequestLegacy = ( function () {
             else {
                 // background(zip_worker.js) 側で Blob URL に変換した場合、Firefox ではダウンロードできなくなってしまう
                 // → content_scripts 側で変換
-                zip_content = response.zip_content
+                zip_content = response.zip_content;
                 zip_url = ( self.url_scheme == 'data' ) ? ( 'data:application/octet-stream;base64,' + zip_content ) : URL.createObjectURL( zip_content );
             }
             

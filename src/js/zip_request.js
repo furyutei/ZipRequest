@@ -35,7 +35,7 @@ window.ZipRequestPromise = class {
                 }
                 
                 if ( ! self.opened ) {
-                    self.__error__( 'ZIP_OPEN', 'not opend', reject );
+                    self.__error__( 'ZIP_OPEN', 'not opened', reject );
                     return;
                 }
                 self.zip_id = response.zip_id;
@@ -51,7 +51,7 @@ window.ZipRequestPromise = class {
         
         return new Promise( ( resolve, reject ) => {
             if ( ! self.opened ) {
-                self.__error__( 'file()', 'not opend', reject );
+                self.__error__( 'file()', 'not opened', reject );
                 return;
             }
             
@@ -82,7 +82,7 @@ window.ZipRequestPromise = class {
         
         return new Promise( ( resolve, reject ) => {
             if ( ! self.opened ) {
-                self.__error__( 'generate()', 'not opend', reject );
+                self.__error__( 'generate()', 'not opened', reject );
                 return;
             }
             
@@ -99,7 +99,7 @@ window.ZipRequestPromise = class {
                 let zip_url, zip_content;
                 
                 if ( response.error ) {
-                    self.__error__( 'ZIP_GENERATE', 'not opend', reject );
+                    self.__error__( 'ZIP_GENERATE', 'not opened', reject );
                     return;
                 }
                 
@@ -146,7 +146,7 @@ window.ZipRequestPromise = class {
         
         return new Promise( ( resolve, reject ) => {
             if ( ! self.opened  ) {
-                self.__error__( 'close()', 'not opend', reject );
+                self.__error__( 'close()', 'not opened', reject );
                 return;
             }
             
@@ -158,7 +158,7 @@ window.ZipRequestPromise = class {
                     zip_id : self.zip_id
                 }, function ( response ) {
                     if ( response.error ) {
-                        self.__error__( 'ZIP_CLOSE', 'not opend', reject );
+                        self.__error__( 'ZIP_CLOSE', 'not opened', reject );
                         return;
                     }
                     self.__success__( response, resolve );

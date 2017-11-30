@@ -58,7 +58,8 @@ function zip_file( tab_id, zip_id, file_info ) {
             zip.file( file_info.filename, file_content, zip_options );
             
             resolve( {
-                result : 'OK'
+                result : 'OK',
+                size : ( typeof file_content.byteLength != 'undefined' ) ? file_content.byteLength : file_content.length
             } );
         } // end of on_load()
         
@@ -101,7 +102,7 @@ function zip_file( tab_id, zip_id, file_info ) {
         } );
     
     } );
-} // end of zip_generate()
+} // end of zip_file()
 
 
 function zip_generate( tab_id, zip_id, zip_parameters ) {
@@ -172,7 +173,7 @@ function zip_close( tab_id, zip_id ) {
         }
         
         delete zip_info.zip;
-        delete tab_info.zip_info_map[ zip_id ]
+        delete tab_info.zip_info_map[ zip_id ];
         
         resolve( {
             result : 'OK'
